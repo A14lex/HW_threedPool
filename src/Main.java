@@ -1,10 +1,11 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.*;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         String[] texts = new String[25];
         List<Thread> firstThreads = new ArrayList<>();
         for (int i = 0; i < texts.length; i++) {
@@ -22,38 +23,53 @@ public class Main {
         }
 
         long startTs = System.currentTimeMillis(); // start time
-        List<Thread> threads = new ArrayList<>();
-        
+        //List<Thread> threads = new ArrayList<>();
+        List<Future<String>> tasks = new ArrayList<>();
+        /*
+        Заведите пул потоков. Вместо списка из потоков сделайте список из Future - сделали.
+В цикле отправьте в пул потоков задачи на исполнение,
+получив в ответ на каждую отправку Future, которые войдут в список.
+После цикла с отправкой задач на исполнение пройдитесь циклом по Future и у каждого вызовите get для ожидания и получения результата,
+который вы обработаете для получения ответа на задачу.
+         */
+        final ExecutorService threadPool = Executors.newFixedThreadPool(texts.length);
 
         for (String text : texts) {
-            Runnable logic = () -> {
-                int maxSize = 0;
-                for (int i = 0; i < text.length(); i++) {
-                    for (int j = 0; j < text.length(); j++) {
-                        if (i >= j) {
-                            continue;
-                        }
-                        boolean bFound = false;
-                        for (int k = i; k < j; k++) {
-                            if (text.charAt(k) == 'b') {
-                                bFound = true;
-                                break;
+            Callable <String> myCallable = new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    int maxSize = 0;
+                    for (int i = 0; i < text.length(); i++) {
+                        for (int j = 0; j < text.length(); j++) {
+                            if (i >= j) {
+                                continue;
+                            }
+                            boolean bFound = false;
+                            for (int k = i; k < j; k++) {
+                                if (text.charAt(k) == 'b') {
+                                    bFound = true;
+                                    break;
+                                }
+                            }
+                            if (!bFound && maxSize < j - i) {
+                                maxSize = j - i;
                             }
                         }
-                        if (!bFound && maxSize < j - i) {
-                            maxSize = j - i;
-                        }
                     }
+                    String result = text.substring(0, 100) + " -> " + maxSize;
+                    return result;
                 }
-                System.out.println(text.substring(0, 100) + " -> " + maxSize);
             };
-            Thread myThread = new Thread(logic);
-            myThread.start();
-            threads.add(myThread);
+            final Future<String> task = threadPool.submit(myCallable);
+            tasks.add(task);
+
+
         }
-        for (Thread thread : threads) {
-            thread.join(); // зависаем, ждём когда поток объект которого лежит в threads завершится
+        for (Future<String> future : tasks) {
+           final String resultOfTasks = future.get();
+            System.out.println(resultOfTasks);
         }
+        threadPool.shutdown();
 
 
         long endTs = System.currentTimeMillis(); // end time
