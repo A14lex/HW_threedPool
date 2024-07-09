@@ -35,7 +35,7 @@ public class Main {
         final ExecutorService threadPool = Executors.newFixedThreadPool(texts.length);
 
         for (String text : texts) {
-            Callable <String> myCallable = new Callable<String>() {
+            Callable<String> myCallable = new Callable<String>() {
                 @Override
                 public String call() throws Exception {
                     int maxSize = 0;
@@ -66,7 +66,7 @@ public class Main {
 
         }
         for (Future<String> future : tasks) {
-           final String resultOfTasks = future.get();
+            final String resultOfTasks = future.get();
             System.out.println(resultOfTasks);
         }
         threadPool.shutdown();
