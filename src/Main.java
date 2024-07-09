@@ -23,7 +23,7 @@ public class Main {
 
         long startTs = System.currentTimeMillis(); // start time
         List<Thread> threads = new ArrayList<>();
-        
+
 
         for (String text : texts) {
             Runnable logic = () -> {
